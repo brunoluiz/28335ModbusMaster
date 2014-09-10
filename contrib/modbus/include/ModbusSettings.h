@@ -6,7 +6,6 @@
 
 // Modbus settings ========================================
 #define MB_MODE 			MB_MODE_SLAVE
-#define MB_SLAVE_ID			0x01
 #define MB_RTU_TCP			false			// Disable ID check and CRC check (TCP converter will do that)
 
 // Modbus Master settings =================================
@@ -17,10 +16,6 @@
 #define SERIAL_BAUDRATE 	38400
 #define SERIAL_PARITY 		SERIAL_PARITY_NONE
 #define SERIAL_BITS_NUMBER 	8
-
-// Timer settings =========================================
-#define MB_T35 			( 7UL * 220000UL ) / ( 2UL * SERIAL_BAUDRATE )
-
 
 // Log settings ===========================================
 // Will be used at Log.h
