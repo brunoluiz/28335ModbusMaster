@@ -5,17 +5,18 @@
 #include "Serial.h"
 
 // Modbus settings ========================================
-#define MB_MODE 			MB_MODE_SLAVE
 #define MB_RTU_TCP			false			// Disable ID check and CRC check (TCP converter will do that)
 
 // Modbus Master settings =================================
-#define MB_REQ_TIMEOUT		10000 // uSeconds
+#define MB_REQ_TIMEOUT		1000000 // uSeconds
 
 // Serial settings ========================================
-
 #define SERIAL_BAUDRATE 	38400
 #define SERIAL_PARITY 		SERIAL_PARITY_NONE
 #define SERIAL_BITS_NUMBER 	8
+
+// Debug settings =========================================
+#define DEBUG_UTILS_PROFILING				true
 
 // Log settings ===========================================
 // Will be used at Log.h

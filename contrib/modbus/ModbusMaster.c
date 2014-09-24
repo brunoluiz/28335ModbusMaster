@@ -4,6 +4,16 @@
 #include "ModbusSettings.h"
 #include "Log.h"
 
+#if DEBUG_UTILS_PROFILING
+#include "Profiling.h"
+#endif
+
+#if DEBUG_UTILS_PROFILING
+ProfilingTool profiling;
+#endif
+
+ModbusMaster mb;
+
 void master_loopStates(ModbusMaster *self){
 	MB_SLAVE_DEBUG();
 	switch (self->state) {
@@ -47,6 +57,10 @@ void master_create(ModbusMaster *self){
 
 	self->timer.init(&self->timer, MB_REQ_TIMEOUT);
 
+#if DEBUG_UTILS_PROFILING
+	profiling = construct_ProfilingTool();
+#endif
+
 	self->state = MB_MASTER_START;
 }
 
@@ -73,13 +87,12 @@ void master_request(ModbusMaster *self){
 
 	// TODO: Implement what you want to request here
 
-	// 11 03 006B 0003 7687
-	self->dataRequest.slaveAddress = 0x11;
+	self->dataRequest.slaveAddress = 0x01;
 	self->dataRequest.functionCode = MB_FUNC_READ_HOLDINGREGISTERS;
 	self->dataRequest.content[self->dataRequest.contentIdx++] = (requestAddr & 0xFF) >> 8;
 	self->dataRequest.content[self->dataRequest.contentIdx++] = requestAddr & 0xFF;
 	self->dataRequest.content[self->dataRequest.contentIdx++] = 0x00;
-	self->dataRequest.content[self->dataRequest.contentIdx++] = 0x03;
+	self->dataRequest.content[self->dataRequest.contentIdx++] = 0x01;
 
 	requestAddr++;
 
@@ -89,7 +102,13 @@ void master_request(ModbusMaster *self){
 	transmitStringWithoutCRC = self->dataResponse.getTransmitStringWithoutCRC(&self->dataRequest);
 	self->dataRequest.crc = generateCrc( transmitStringWithoutCRC, sizeWithoutCRC );
 
+
 	transmitString = self->dataResponse.getTransmitString(&self->dataRequest);
+
+	self->timer.start();
+#if DEBUG_UTILS_PROFILING
+	profiling.start(&profiling);
+#endif
 	self->serial.transmitData(transmitString, self->dataRequest.size);
 
 	MB_SLAVE_DEBUG();
@@ -112,25 +131,26 @@ void master_receive(ModbusMaster *self){
 		fifoWaitBuffer = MB_SIZE_RESP_WRITE;
 	}
 
-	self->timer.start();
-
 	while (
 		self->serial.rxBufferStatus() < fifoWaitBuffer
 		&& ( self->serial.getRxError() == false )
 		&& ( self->timeout == false )
-	){
-		if ( self->timer.expiredTimer(&self->timer) ) {
-			self->timeout = true;
-			self->timeoutCounter++;
-		}
-	}
+	){	}
 
 	self->timer.stop();
+#if DEBUG_UTILS_PROFILING
+	profiling.stop(&profiling);
+#endif
+
+	self->state = MB_MASTER_START;
 
 	// If there is any error on Reception, it will go to the START state
 	if (self->serial.getRxError() == true || self->timeout == true){
 		self->state = MB_MASTER_START;
 	} else {
+//		Uncomment below if you don´t need to process any data
+//		self->successfulRequests++;
+//		self->state = MB_MASTER_START;
 		self->state = MB_MASTER_PROCESS;
 	}
 }

@@ -5,12 +5,17 @@
 
 // Clear flags of overflow
 void serial_clear(){
+	Uint16 clear;
+	Uint16 i = 0;
 	SERIAL_DEBUG();
 
 	// Reset Serial in case of error
 	if(SciaRegs.SCIRXST.bit.RXERROR == true){
 		SciaRegs.SCICTL1.bit.SWRESET=0;
 	}
+
+	for(i = 0; i < SciaRegs.SCIFFRX.bit.RXFFST; i++)
+		clear = serial_getRxBufferedWord();
 
 	// Reset FIFO
 	SciaRegs.SCIFFRX.bit.RXFIFORESET=1;
@@ -118,7 +123,7 @@ void serial_transmitData(Uint16 * data, Uint16 size){
 		SciaRegs.SCITXBUF= data[i];
 	}
 
-	while (SciaRegs.SCICTL2.bit.TXEMPTY != true) ;
+//	while (SciaRegs.SCICTL2.bit.TXEMPTY != true) ;
 }
 
 // Get Read data from buffer

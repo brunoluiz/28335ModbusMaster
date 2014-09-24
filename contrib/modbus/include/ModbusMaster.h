@@ -42,6 +42,6 @@ inline void master_process(ModbusMaster *self);
 inline void master_destroy(ModbusMaster *self);
 ModbusMaster construct_ModbusMaster();
 
-// extern ModbusMaster modbus;
+extern ModbusMaster mb;
 
 #endif
