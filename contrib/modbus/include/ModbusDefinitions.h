@@ -3,12 +3,6 @@
 
 // DON'T MODIFY THE CODE BELOW!
 
-// Modbus Mode Constants
- typedef enum {
-	MB_MODE_MASTER,
-	MB_MODE_SLAVE
-} ModbusMode;
-
 // Read codes
  typedef enum {
 	MB_FUNC_READ_COIL = 1,
@@ -23,14 +17,12 @@
 
 // State machine constants
 typedef enum {
-	MB_MASTER_CREATE,
-	MB_MASTER_START,
-	MB_MASTER_REQUEST,
-	MB_MASTER_WAIT_PREPARE,
-	MB_MASTER_WAIT,
-	MB_MASTER_RECEIVE,
-	MB_MASTER_PROCESS,
-	MB_MASTER_DESTROY,
+	MB_CREATE,
+	MB_START,
+	MB_REQUEST,
+	MB_RECEIVE,
+	MB_PROCESS,
+	MB_DESTROY
 } ModbusMasterState;
 
 // Error codes

@@ -1,7 +1,7 @@
 #ifndef MODBUS_SERIAL_H_
 #define MODBUS_SERIAL_H_
 
-#include "PlataformSettings.h"
+#include "DataTypes.h"
 
 typedef struct Serial Serial;
 
@@ -16,6 +16,8 @@ struct Serial {
 	Uint16 bitsNumber;
 	Uint16 parityType;
 	Uint32 baudrate;
+
+	Uint16 fifoWaitBuffer;
 
 	void (*clear)();
 	Uint16 (*rxBufferStatus)();
