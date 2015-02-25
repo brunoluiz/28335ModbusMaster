@@ -72,11 +72,9 @@ void master_request(ModbusMaster *self){
 	Uint16 * transmitString;
 	Uint16 registerContents[2];
 
-
-	// Implementing a demo request
+	// Implementing a demo request using mb.requestHandler
 	registerContents[0] = 0x0001;
 	registerContents[1] = 0xFFFF;
-
 	mb.requestHandler.slaveAddress = 0x01;
 	mb.requestHandler.functionCode = MB_FUNC_WRITE_NREGISTERS;
 	mb.requestHandler.firstAddr	   = 0x02;
@@ -88,13 +86,6 @@ void master_request(ModbusMaster *self){
 	while(self->requestHandler.isReady == false ) { }
 	// Reset request ready signal
 	self->requestHandler.isReady = false;
-
-	// Prepares data request string
-//	self->dataRequest.size = MB_SIZE_COMMON_DATA + self->dataRequest.contentIdx;
-//	sizeWithoutCRC = self->dataRequest.size - 2;
-//	transmitStringWithoutCRC = self->dataResponse.getTransmitStringWithoutCRC(&self->dataRequest);
-//	self->dataRequest.crc = generateCrc( transmitStringWithoutCRC, sizeWithoutCRC, true );
-
 
 	transmitString = self->dataResponse.getTransmitString(&self->dataRequest);
 	self->timer.start();
@@ -144,7 +135,7 @@ void master_receive(ModbusMaster *self){
 	} else {
 //		Uncomment below if you don't need to process any data
 //		self->successfulRequests++;
-//		self->state = MB_MASTER_START;
+//		self->state = MB_START;
 		self->state = MB_PROCESS;
 	}
 }
