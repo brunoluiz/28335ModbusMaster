@@ -1,18 +1,10 @@
 #include "ModbusMaster.h"
-#include "ModbusData.h"
-#include "ModbusDefinitions.h"
-#include "ModbusSettings.h"
 #include "Log.h"
 
 #if DEBUG_UTILS_PROFILING
 #include "Profiling.h"
-#endif
-
-#if DEBUG_UTILS_PROFILING
 ProfilingTool profiling;
 #endif
-
-ModbusMaster mb;
 
 void master_loopStates(ModbusMaster *self){
 	MB_SLAVE_DEBUG();
@@ -148,7 +140,7 @@ void master_receive(ModbusMaster *self){
 	if (self->serial.getRxError() == true || self->timeout == true){
 		self->state = MB_MASTER_START;
 	} else {
-//		Uncomment below if you don´t need to process any data
+//		Uncomment below if you donï¿½t need to process any data
 //		self->successfulRequests++;
 //		self->state = MB_MASTER_START;
 		self->state = MB_MASTER_PROCESS;

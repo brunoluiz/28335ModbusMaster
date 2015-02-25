@@ -4,9 +4,12 @@
 #include "ModbusDefinitions.h"
 #include "ModbusData.h"
 // #include "ModbusDataHandler.h"
+#include MB_DATA_MAP
 #include "Serial.h"
 #include "Timer.h"
 #include "Crc.h"
+
+#include "ModbusSettings.h"
 
 typedef struct ModbusMaster ModbusMaster;
 

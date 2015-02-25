@@ -5,6 +5,8 @@
 #include "DSP2833x_DefaultISR.h"
 #include "ModbusMaster.h"
 
+ModbusMaster mb;
+
 int main(){
 	InitSysCtrl();
 
