@@ -69,31 +69,34 @@ void master_start(ModbusMaster *self){
 }
 
 void master_request(ModbusMaster *self){
-	Uint16 * transmitStringWithoutCRC;
 	Uint16 * transmitString;
-	Uint16 sizeWithoutCRC;
+	Uint16 registerContents[2];
 
-	static Uint16 requestAddr = 0;
 
-	// TODO: Implement what you want to request here
-	self->dataRequest.slaveAddress = 0x01;
-	self->dataRequest.functionCode = MB_FUNC_READ_HOLDINGREGISTERS;
-	self->dataRequest.content[self->dataRequest.contentIdx++] = (requestAddr & 0xFF) >> 8;
-	self->dataRequest.content[self->dataRequest.contentIdx++] = requestAddr & 0xFF;
-	self->dataRequest.content[self->dataRequest.contentIdx++] = 0x00;
-	self->dataRequest.content[self->dataRequest.contentIdx++] = 0x01;
+	// Implementing a demo request
+	registerContents[0] = 0x0001;
+	registerContents[1] = 0xFFFF;
 
-	requestAddr++;
+	mb.requestHandler.slaveAddress = 0x01;
+	mb.requestHandler.functionCode = MB_FUNC_WRITE_NREGISTERS;
+	mb.requestHandler.firstAddr	   = 0x02;
+	mb.requestHandler.totalData    = 2;
+	mb.requestHandler.content      = registerContents;
+	mb.requestHandler.generate(self);
 
-	self->dataRequest.size = MB_SIZE_COMMON_DATA + self->dataRequest.contentIdx;
+	// Wait until the code signals that the request is ready to transmit
+	while(self->requestHandler.isReady == false ) { }
+	// Reset request ready signal
+	self->requestHandler.isReady = false;
 
-	sizeWithoutCRC = self->dataRequest.size - 2;
-	transmitStringWithoutCRC = self->dataResponse.getTransmitStringWithoutCRC(&self->dataRequest);
-	self->dataRequest.crc = generateCrc( transmitStringWithoutCRC, sizeWithoutCRC, true );
+	// Prepares data request string
+//	self->dataRequest.size = MB_SIZE_COMMON_DATA + self->dataRequest.contentIdx;
+//	sizeWithoutCRC = self->dataRequest.size - 2;
+//	transmitStringWithoutCRC = self->dataResponse.getTransmitStringWithoutCRC(&self->dataRequest);
+//	self->dataRequest.crc = generateCrc( transmitStringWithoutCRC, sizeWithoutCRC, true );
 
 
 	transmitString = self->dataResponse.getTransmitString(&self->dataRequest);
-
 	self->timer.start();
 #if DEBUG_UTILS_PROFILING
 	profiling.start(&profiling);
@@ -111,6 +114,8 @@ void master_receive(ModbusMaster *self){
 
 	MB_MASTER_DEBUG();
 
+	self->requestProcessed = false;
+
 	if (self->dataRequest.functionCode == MB_FUNC_READ_HOLDINGREGISTERS) {
 		fifoWaitBuffer = MB_SIZE_COMMON_DATA;
 		fifoWaitBuffer += self->dataRequest.content[3] * 2;
@@ -123,7 +128,7 @@ void master_receive(ModbusMaster *self){
 	while (
 		self->serial.rxBufferStatus() < fifoWaitBuffer
 		&& ( self->serial.getRxError() == false )
-		&& ( self->timeout == false )
+		&& ( self->timer.expiredTimer(&self->timer) == false )
 	){	}
 
 	self->timer.stop();
@@ -166,6 +171,7 @@ void master_process(ModbusMaster *self){
 			self->serial.getRxBufferedWord();
 
 	self->successfulRequests++;
+	self->requestProcessed = true;
 
 	self->state = MB_START;
 }
@@ -182,11 +188,14 @@ ModbusMaster construct_ModbusMaster(){
 	modbusMaster.state = MB_CREATE;
 	modbusMaster.dataRequest = construct_ModbusData();
 	modbusMaster.dataResponse = construct_ModbusData();
+	modbusMaster.requestHandler = construct_ModbusRequestHandler();
 	modbusMaster.serial = construct_Serial();
 	modbusMaster.timer = construct_Timer();
 
 	modbusMaster.timeoutCounter = 0;
 	modbusMaster.successfulRequests = 0;
+	modbusMaster.requestReady = false;
+	modbusMaster.requestProcessed = false;
 
 	modbusMaster.loopStates = master_loopStates;
 	modbusMaster.create = master_create;

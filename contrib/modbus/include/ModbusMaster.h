@@ -3,15 +3,15 @@
 
 #include "ModbusDefinitions.h"
 #include "ModbusData.h"
-// #include "ModbusDataHandler.h"
 #include MB_DATA_MAP
 #include "Serial.h"
 #include "Timer.h"
 #include "Crc.h"
 
-#include "ModbusSettings.h"
+//typedef struct ModbusMaster ModbusMaster;
 
-typedef struct ModbusMaster ModbusMaster;
+#include "ModbusRequestHandler.h"
+#include "ModbusSettings.h"
 
 struct ModbusMaster {
 	ModbusMasterState state;
@@ -19,14 +19,16 @@ struct ModbusMaster {
 	ModbusData dataRequest;
 	ModbusData dataResponse;
 
+	ModbusRequestHandler requestHandler;
+
 	Serial serial;
 	Timer timer;
 
 	Uint16 timeoutCounter;
 	Uint16 successfulRequests;
 	bool timeout;
-
-//	ModbusDataHandler dataHandler;
+	bool requestReady;
+	bool requestProcessed;
 
 	void (*loopStates)(ModbusMaster *self);
 	void (*create)(ModbusMaster *self);
