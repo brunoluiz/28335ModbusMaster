@@ -18,22 +18,22 @@ void requestHandler_generate(ModbusMaster *master) {
 	if (requestHandler.functionCode == MB_FUNC_READ_COIL || requestHandler.functionCode == MB_FUNC_READ_INPUT ||
 			requestHandler.functionCode == MB_FUNC_READ_HOLDINGREGISTERS || requestHandler.functionCode == MB_FUNC_READ_INPUTREGISTERS)
 	{
-		master->dataRequest.content[MB_READ_ADDRESS_HIGH]   = (requestHandler.slaveAddress & 0xFF00) >> 8;
-		master->dataRequest.content[MB_READ_ADDRESS_LOW]    = (requestHandler.slaveAddress & 0x00FF);
+		master->dataRequest.content[MB_READ_ADDRESS_HIGH]   = (requestHandler.firstAddr & 0xFF00) >> 8;
+		master->dataRequest.content[MB_READ_ADDRESS_LOW]    = (requestHandler.firstAddr & 0x00FF);
 		master->dataRequest.content[MB_READ_TOTALDATA_HIGH] = (requestHandler.totalData & 0xFF00) >> 8;
 		master->dataRequest.content[MB_READ_TOTALDATA_LOW]  = (requestHandler.totalData & 0x00FF);
 		master->dataRequest.contentIdx = MB_READ_TOTALDATA_LOW;
 	}
 	else if (requestHandler.functionCode == MB_FUNC_WRITE_HOLDINGREGISTER || requestHandler.functionCode == MB_FUNC_FORCE_COIL) {
-		master->dataRequest.content[MB_WRITE_ADDRESS_HIGH]  = (requestHandler.slaveAddress & 0xFF00) >> 8;
-		master->dataRequest.content[MB_WRITE_ADDRESS_HIGH]  = (requestHandler.slaveAddress & 0x00FF);
+		master->dataRequest.content[MB_WRITE_ADDRESS_HIGH]  = (requestHandler.firstAddr & 0xFF00) >> 8;
+		master->dataRequest.content[MB_WRITE_ADDRESS_HIGH]  = (requestHandler.firstAddr & 0x00FF);
 		master->dataRequest.content[MB_WRITE_VALUE_HIGH]    = (requestHandler.content[0] & 0xFF00) >> 8;
 		master->dataRequest.content[MB_WRITE_VALUE_LOW]     = (requestHandler.content[0] & 0x00FF);
 		master->dataRequest.contentIdx = MB_WRITE_VALUE_LOW;
 	}
 	else if (requestHandler.functionCode == MB_FUNC_WRITE_NREGISTERS ||	requestHandler.functionCode == MB_FUNC_FORCE_NCOILS) {
-		master->dataRequest.content[MB_WRITE_N_ADDRESS_HIGH]  = (requestHandler.slaveAddress & 0xFF00) >> 8;
-		master->dataRequest.content[MB_WRITE_N_ADDRESS_LOW]  = (requestHandler.slaveAddress & 0x00FF);
+		master->dataRequest.content[MB_WRITE_N_ADDRESS_HIGH]  = (requestHandler.firstAddr & 0xFF00) >> 8;
+		master->dataRequest.content[MB_WRITE_N_ADDRESS_LOW]  = (requestHandler.firstAddr & 0x00FF);
 
 		master->dataRequest.content[MB_WRITE_N_QUANTITY_HIGH] = (requestHandler.totalData & 0xFF00) >> 8;
 		master->dataRequest.content[MB_WRITE_N_QUANTITY_LOW]  = (requestHandler.totalData & 0x00FF);

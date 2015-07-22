@@ -70,17 +70,6 @@ void master_start(ModbusMaster *self){
 
 void master_request(ModbusMaster *self){
 	Uint16 * transmitString;
-	Uint16 registerContents[2];
-
-	// Implementing a demo request using mb.requestHandler
-	registerContents[0] = 0x0001;
-	registerContents[1] = 0xFFFF;
-	mb.requestHandler.slaveAddress = 0x01;
-	mb.requestHandler.functionCode = MB_FUNC_WRITE_NREGISTERS;
-	mb.requestHandler.firstAddr	   = 0x02;
-	mb.requestHandler.totalData    = 2;
-	mb.requestHandler.content      = registerContents;
-	mb.requestHandler.generate(self);
 
 	// Wait until the code signals that the request is ready to transmit
 	while(self->requestHandler.isReady == false ) { }
@@ -88,7 +77,6 @@ void master_request(ModbusMaster *self){
 	self->requestHandler.isReady = false;
 
 	transmitString = self->dataResponse.getTransmitString(&self->dataRequest);
-	self->timer.start();
 #if DEBUG_UTILS_PROFILING
 	profiling.start(&profiling);
 #endif
@@ -96,7 +84,8 @@ void master_request(ModbusMaster *self){
 
 	MB_MASTER_DEBUG();
 
-	self->state = MB_RECEIVE;
+//	self->state = MB_RECEIVE;
+	self->state = MB_START;
 }
 
 
@@ -105,6 +94,7 @@ void master_receive(ModbusMaster *self){
 
 	MB_MASTER_DEBUG();
 
+	self->timer.start();
 	self->requestProcessed = false;
 
 	if (self->dataRequest.functionCode == MB_FUNC_READ_HOLDINGREGISTERS) {

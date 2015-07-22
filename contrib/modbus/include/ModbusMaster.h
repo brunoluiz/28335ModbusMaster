@@ -3,7 +3,6 @@
 
 #include "ModbusDefinitions.h"
 #include "ModbusData.h"
-#include MB_DATA_MAP
 #include "Serial.h"
 #include "Timer.h"
 #include "Crc.h"

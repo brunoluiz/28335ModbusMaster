@@ -3,7 +3,6 @@
 
 #include "ModbusDefinitions.h"
 #include "ModbusSettings.h"
-#include MB_DATA_MAP
 
 typedef struct ModbusRequestHandler ModbusRequestHandler;
 typedef struct ModbusMaster ModbusMaster;
