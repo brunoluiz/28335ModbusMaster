@@ -5,7 +5,7 @@
 #include "ModbusDefinitions.h"
 #include "Serial.h"
 
-#define MB_REQ_TIMEOUT			1000000
+#define MB_REQ_TIMEOUT			500000 // 500ms
 
 // Modbus settings ========================================
 #define MB_SLAVE_ID				0x01

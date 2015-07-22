@@ -50,7 +50,6 @@ void master_create(ModbusMaster *self){
 #if DEBUG_UTILS_PROFILING
 	profiling = construct_ProfilingTool();
 #endif
-
 	self->state = MB_START;
 }
 
@@ -84,8 +83,7 @@ void master_request(ModbusMaster *self){
 
 	MB_MASTER_DEBUG();
 
-//	self->state = MB_RECEIVE;
-	self->state = MB_START;
+	self->state = MB_RECEIVE;
 }
 
 
@@ -117,15 +115,10 @@ void master_receive(ModbusMaster *self){
 	profiling.stop(&profiling);
 #endif
 
-	self->state = MB_START;
-
 	// If there is any error on Reception, it will go to the START state
 	if (self->serial.getRxError() == true || self->timeout == true){
 		self->state = MB_START;
 	} else {
-//		Uncomment below if you don't need to process any data
-//		self->successfulRequests++;
-//		self->state = MB_START;
 		self->state = MB_PROCESS;
 	}
 }
