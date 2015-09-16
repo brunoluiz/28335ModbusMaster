@@ -79,8 +79,8 @@ void requester_generate(ModbusMaster *master) {
 		// Loop throught the selected data map
 		for(i=0; i < requester.totalData; i++) {
 			Uint16 padding = i + requester.addr;
-			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding) & 0xFF00) >> 8;
-			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding) & 0x00FF);
+			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding + 1) & 0xFF00) >> 8;
+			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding + 1) & 0x00FF);
 		}
 	}
 
