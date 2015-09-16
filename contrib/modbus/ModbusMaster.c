@@ -72,9 +72,9 @@ void master_request(ModbusMaster *self){
 	Uint16 * transmitString;
 
 	// Wait until the code signals that the request is ready to transmit
-	while (self->requestHandler.isReady == false ) { }
+	while (self->requester.isReady == false ) { }
 	// Reset request ready signal
-	self->requestHandler.isReady = false;
+	self->requester.isReady = false;
 
 	transmitString = self->dataResponse.getTransmitString(&self->dataRequest);
 #if DEBUG_UTILS_PROFILING
@@ -163,7 +163,7 @@ ModbusMaster construct_ModbusMaster(){
 	modbusMaster.state = MB_CREATE;
 	modbusMaster.dataRequest = construct_ModbusData();
 	modbusMaster.dataResponse = construct_ModbusData();
-	modbusMaster.requestHandler = construct_ModbusRequestHandler();
+	modbusMaster.requester = construct_ModbusRequestHandler();
 	modbusMaster.serial = construct_Serial();
 	modbusMaster.timer = construct_Timer();
 
@@ -173,16 +173,16 @@ ModbusMaster construct_ModbusMaster(){
 	modbusMaster.requestProcessed = false;
 
 #if MB_COILS_ENABLED
-	modbusSlave.coils = construct_ModbusCoilsMap();
+	modbusMaster.coils = construct_ModbusCoilsMap();
 #endif
 #if MB_INPUTS_ENABLED
-	modbusSlave.inputs = construct_ModbusInputsMap();
+	modbusMaster.inputs = construct_ModbusInputsMap();
 #endif
 #if MB_HOLDING_REGISTERS_ENABLED
-	modbusSlave.holdingRegisters = construct_ModbusHoldingRegistersMap();
+	modbusMaster.holdingRegisters = construct_ModbusHoldingRegistersMap();
 #endif
 #if MB_INPUT_REGISTERS_ENABLED
-	modbusSlave.inputRegisters = construct_ModbusInputRegistersMap();
+	modbusMaster.inputRegisters = construct_ModbusInputRegistersMap();
 #endif
 
 	modbusMaster.loopStates = master_loopStates;

@@ -10,7 +10,7 @@
 
 //typedef struct ModbusMaster ModbusMaster;
 
-#include "ModbusRequestHandler.h"
+#include "ModbusRequester.h"
 
 struct ModbusMaster {
 	ModbusMasterState state;
@@ -18,7 +18,7 @@ struct ModbusMaster {
 	ModbusData dataRequest;
 	ModbusData dataResponse;
 
-	ModbusRequestHandler requestHandler;
+	ModbusRequester requester;
 
 	Serial serial;
 	Timer timer;

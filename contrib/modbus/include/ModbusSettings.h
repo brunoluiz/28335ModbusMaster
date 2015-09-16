@@ -19,9 +19,9 @@
 #define MB_DATA_MAP						"ModbusDataMap.h"
 #define MB_32_BITS_REGISTERS			true
 #define MB_COILS_ENABLED				1
-#define MB_INPUTS_ENABLED				0
+#define MB_INPUTS_ENABLED				1
 #define	MB_HOLDING_REGISTERS_ENABLED	1
-#define MB_INPUT_REGISTERS_ENABLED		0
+#define MB_INPUT_REGISTERS_ENABLED		1
 #else
 #define MB_DATA_MAP						"ModbusDataMapTests.h" // Use it when you run libmodbus tests
 #define MB_32_BITS_REGISTERS			false // Use it when you run libmodbus tests

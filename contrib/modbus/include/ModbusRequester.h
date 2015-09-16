@@ -4,13 +4,13 @@
 #include "ModbusDefinitions.h"
 #include "ModbusSettings.h"
 
-typedef struct ModbusRequestHandler ModbusRequestHandler;
+typedef struct ModbusRequester ModbusRequester;
 typedef struct ModbusMaster ModbusMaster;
 
-struct ModbusRequestHandler {
+struct ModbusRequester {
 	Uint16 slaveAddress;
 	ModbusFunctionCode functionCode;
-	Uint16 firstAddr;
+	Uint16 addr;
 	Uint16 totalData;
 
 	// Write functions special
@@ -22,8 +22,8 @@ struct ModbusRequestHandler {
 	void (*generate)(ModbusMaster *master);
 };
 
-inline void requestHandler_setContent(ModbusMaster *master, Uint16 * content, Uint16 length);
-inline void requestHandler_generate(ModbusMaster *master);
-ModbusRequestHandler construct_ModbusRequestHandler();
+inline void requester_setContent(ModbusMaster *master, Uint16 * content, Uint16 length);
+inline void requester_generate(ModbusMaster *master);
+ModbusRequester construct_ModbusRequestHandler();
 
 #endif
