@@ -10,7 +10,6 @@
 //typedef struct ModbusMaster ModbusMaster;
 
 #include "ModbusRequestHandler.h"
-#include "ModbusSettings.h"
 
 struct ModbusMaster {
 	ModbusMasterState state;

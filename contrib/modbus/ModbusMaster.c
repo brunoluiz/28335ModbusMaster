@@ -1,4 +1,5 @@
 #include "ModbusMaster.h"
+#include "ModbusSettings.h"
 #include "Log.h"
 
 #if DEBUG_UTILS_PROFILING
@@ -71,7 +72,7 @@ void master_request(ModbusMaster *self){
 	Uint16 * transmitString;
 
 	// Wait until the code signals that the request is ready to transmit
-	while(self->requestHandler.isReady == false ) { }
+	while (self->requestHandler.isReady == false ) { }
 	// Reset request ready signal
 	self->requestHandler.isReady = false;
 
