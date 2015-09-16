@@ -27,11 +27,6 @@ void requester_generate(ModbusMaster *master) {
 		dataPtr = (char *)&(master->coils);
 		sizeOfMap = sizeof(master->coils);
 	}
-	else if (requester.functionCode == MB_FUNC_READ_INPUT)
-	{
-		dataPtr = (char *)&(master->inputs);
-		sizeOfMap = sizeof(master->inputs);
-	}
 	else if (requester.functionCode == MB_FUNC_READ_HOLDINGREGISTERS ||
 			requester.functionCode == MB_FUNC_WRITE_HOLDINGREGISTER ||
 			requester.functionCode == MB_FUNC_WRITE_NREGISTERS)
@@ -39,12 +34,6 @@ void requester_generate(ModbusMaster *master) {
 		dataPtr = (char *)&(master->holdingRegisters);
 		sizeOfMap = sizeof(master->holdingRegisters);
 	}
-	else if (requester.functionCode == MB_FUNC_READ_INPUTREGISTERS)
-	{
-		dataPtr = (char *)&(master->inputRegisters);
-		sizeOfMap = sizeof(master->inputRegisters);
-	}
-
 
 	// Second: prepare the dataRequest content array
 	if (requester.functionCode == MB_FUNC_READ_COIL || requester.functionCode == MB_FUNC_READ_INPUT ||
@@ -59,13 +48,17 @@ void requester_generate(ModbusMaster *master) {
 	else if (requester.functionCode == MB_FUNC_WRITE_HOLDINGREGISTER || requester.functionCode == MB_FUNC_FORCE_COIL) {
 		master->dataRequest.content[MB_WRITE_ADDRESS_HIGH]  = (requester.addr & 0xFF00) >> 8;
 		master->dataRequest.content[MB_WRITE_ADDRESS_HIGH]  = (requester.addr & 0x00FF);
-		master->dataRequest.content[MB_WRITE_VALUE_HIGH]    = (requester.content[0] & 0xFF00) >> 8;
-		master->dataRequest.content[MB_WRITE_VALUE_LOW]     = (requester.content[0] & 0x00FF);
-		master->dataRequest.contentIdx = MB_WRITE_VALUE_LOW;
 
 		// Get the data at the specified address (one byte only)
-		master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + requester.addr + 1) & 0xFF00) >> 8;
-		master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + requester.addr + 1) & 0x00FF);
+		#if MB_32_BITS_REGISTERS == true
+		master->dataRequest.content[MB_WRITE_VALUE_HIGH] = (*(dataPtr + requester.addr + 1) & 0xFF00) >> 8;
+		master->dataRequest.content[MB_WRITE_VALUE_LOW]  = (*(dataPtr + requester.addr + 1) & 0x00FF);
+		#else
+		master->dataRequest.content[MB_WRITE_VALUE_HIGH] = (*(dataPtr + requester.addr) & 0xFF00) >> 8;
+		master->dataRequest.content[MB_WRITE_VALUE_LOW]  = (*(dataPtr + requester.addr) & 0x00FF);
+		#endif
+
+		master->dataRequest.contentIdx = MB_WRITE_VALUE_LOW;
 	}
 	else if (requester.functionCode == MB_FUNC_WRITE_NREGISTERS ||	requester.functionCode == MB_FUNC_FORCE_NCOILS) {
 		master->dataRequest.content[MB_WRITE_N_ADDRESS_HIGH]  = (requester.addr & 0xFF00) >> 8;
@@ -79,8 +72,13 @@ void requester_generate(ModbusMaster *master) {
 		// Loop throught the selected data map
 		for(i=0; i < requester.totalData; i++) {
 			Uint16 padding = i + requester.addr;
+			#if MB_32_BITS_REGISTERS == true
 			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding + 1) & 0xFF00) >> 8;
 			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding + 1) & 0x00FF);
+			#else
+			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding) & 0xFF00) >> 8;
+			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding) & 0x00FF);
+			#endif
 		}
 	}
 
