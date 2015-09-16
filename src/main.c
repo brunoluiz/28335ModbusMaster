@@ -6,6 +6,7 @@ ModbusMaster mb;
 
 int main(){
 	Uint16 testVar = 0;
+	InitSysCtrl();
 	mb = construct_ModbusMaster();
 
 	while(1) {
