@@ -6,6 +6,7 @@
 #include "Serial.h"
 #include "Timer.h"
 #include "Crc.h"
+#include MB_DATA_MAP
 
 //typedef struct ModbusMaster ModbusMaster;
 
@@ -21,6 +22,19 @@ struct ModbusMaster {
 
 	Serial serial;
 	Timer timer;
+
+#if MB_COILS_ENABLED
+	ModbusCoilsMap coils;
+#endif
+#if MB_INPUTS_ENABLED
+	ModbusInputsMap inputs;
+#endif
+#if MB_HOLDING_REGISTERS_ENABLED
+	ModbusHoldingRegistersMap holdingRegisters;
+#endif
+#if MB_INPUT_REGISTERS_ENABLED
+	ModbusInputRegistersMap inputRegisters;
+#endif
 
 	Uint16 timeoutCounter;
 	Uint16 successfulRequests;

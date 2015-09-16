@@ -172,6 +172,19 @@ ModbusMaster construct_ModbusMaster(){
 	modbusMaster.requestReady = false;
 	modbusMaster.requestProcessed = false;
 
+#if MB_COILS_ENABLED
+	modbusSlave.coils = construct_ModbusCoilsMap();
+#endif
+#if MB_INPUTS_ENABLED
+	modbusSlave.inputs = construct_ModbusInputsMap();
+#endif
+#if MB_HOLDING_REGISTERS_ENABLED
+	modbusSlave.holdingRegisters = construct_ModbusHoldingRegistersMap();
+#endif
+#if MB_INPUT_REGISTERS_ENABLED
+	modbusSlave.inputRegisters = construct_ModbusInputRegistersMap();
+#endif
+
 	modbusMaster.loopStates = master_loopStates;
 	modbusMaster.create = master_create;
 	modbusMaster.start = master_start;
