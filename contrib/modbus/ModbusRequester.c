@@ -43,7 +43,7 @@ void requester_generate(ModbusMaster *master) {
 		master->dataRequest.content[MB_READ_ADDRESS_LOW]    = (requester.addr & 0x00FF);
 		master->dataRequest.content[MB_READ_TOTALDATA_HIGH] = (requester.totalData & 0xFF00) >> 8;
 		master->dataRequest.content[MB_READ_TOTALDATA_LOW]  = (requester.totalData & 0x00FF);
-		master->dataRequest.contentIdx = MB_READ_TOTALDATA_LOW;
+		master->dataRequest.contentIdx = MB_READ_TOTALDATA_LOW + 1;
 	}
 	else if (requester.functionCode == MB_FUNC_WRITE_HOLDINGREGISTER || requester.functionCode == MB_FUNC_FORCE_COIL) {
 		master->dataRequest.content[MB_WRITE_ADDRESS_HIGH]  = (requester.addr & 0xFF00) >> 8;
@@ -58,7 +58,7 @@ void requester_generate(ModbusMaster *master) {
 		master->dataRequest.content[MB_WRITE_VALUE_LOW]  = (*(dataPtr + requester.addr) & 0x00FF);
 		#endif
 
-		master->dataRequest.contentIdx = MB_WRITE_VALUE_LOW;
+		master->dataRequest.contentIdx = MB_WRITE_VALUE_LOW + 1;
 	}
 	else if (requester.functionCode == MB_FUNC_WRITE_NREGISTERS ||	requester.functionCode == MB_FUNC_FORCE_NCOILS) {
 		master->dataRequest.content[MB_WRITE_N_ADDRESS_HIGH]  = (requester.addr & 0xFF00) >> 8;
@@ -75,6 +75,9 @@ void requester_generate(ModbusMaster *master) {
 			#if MB_32_BITS_REGISTERS == true
 			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding + 1) & 0xFF00) >> 8;
 			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding + 1) & 0x00FF);
+			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding + 0) & 0xFF00) >> 8;
+			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding + 0) & 0x00FF);
+			i++;
 			#else
 			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding) & 0xFF00) >> 8;
 			master->dataRequest.content[master->dataRequest.contentIdx++] = (*(dataPtr + padding) & 0x00FF);
@@ -91,20 +94,60 @@ void requester_generate(ModbusMaster *master) {
 	master->requester.isReady = true;
 }
 
+void requester_save(ModbusMaster *master) {
+	ModbusRequester requester = master->requester;
+	Uint16 i, sizeWithoutCRC;
+	Uint16 * transmitStringWithoutCRC;
+
+	// Reference to MODBUS Data Map
+	Uint16 * dataPtr;
+	Uint16 sizeOfMap = 0;
+
+	// First, get the right data map based on the function code
+	if (requester.functionCode == MB_FUNC_READ_COIL ||
+			requester.functionCode == MB_FUNC_FORCE_COIL ||
+			requester.functionCode == MB_FUNC_FORCE_NCOILS)
+	{
+		dataPtr = (char *)&(master->coils);
+		sizeOfMap = sizeof(master->coils);
+	}
+	else if (requester.functionCode == MB_FUNC_READ_HOLDINGREGISTERS ||
+			requester.functionCode == MB_FUNC_WRITE_HOLDINGREGISTER ||
+			requester.functionCode == MB_FUNC_WRITE_NREGISTERS)
+	{
+		dataPtr = (char *)&(master->holdingRegisters);
+		sizeOfMap = sizeof(master->holdingRegisters);
+	}
+
+	if (requester.functionCode == MB_FUNC_READ_COIL || requester.functionCode == MB_FUNC_READ_INPUT ||
+				requester.functionCode == MB_FUNC_READ_HOLDINGREGISTERS || requester.functionCode == MB_FUNC_READ_INPUTREGISTERS)
+	{
+		Uint16 * memAddr;
+
+		for(i=0; i < (requester.totalData); i++) {
+			Uint16 padding = i + requester.addr;
+			memAddr = (Uint16 *) (dataPtr + padding);
+			*(memAddr) = (master->dataResponse.content[1+i*2] << 8) | (master->dataResponse.content[(1+1)+i*2]);
+		}
+	}
+}
+
 ModbusRequester construct_ModbusRequestHandler(){
-	ModbusRequester requestHandler;
+	ModbusRequester requester;
 
-	requestHandler.slaveAddress = 1;
-	requestHandler.functionCode = MB_FUNC_READ_HOLDINGREGISTERS;
-	requestHandler.addr = 0;
-	requestHandler.totalData = 0;
+	requester.slaveAddress = 1;
+	requester.functionCode = MB_FUNC_READ_HOLDINGREGISTERS;
+	requester.addr = 0;
+	requester.totalData = 0;
 
-	requestHandler.isReady = false;
+	requester.isReady = false;
 
-	requestHandler.generate = requester_generate;
-	requestHandler.setContent = requester_setContent;
+	requester.generate = requester_generate;
+	requester.setContent = requester_setContent;
+	requester.save = requester_save;
 
 	MB_DATA_HANDLER_DEBUG();
 
-	return requestHandler;
+	return requester;
 }
+

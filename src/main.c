@@ -9,10 +9,14 @@ int main(){
 	InitSysCtrl();
 	mb = construct_ModbusMaster();
 
+	mb.holdingRegisters.dummy0 = 20.1;
+	mb.holdingRegisters.dummy1 = 23.13;
+
 	mb.requester.slaveAddress = 0x01;
-	mb.requester.functionCode = MB_FUNC_WRITE_NREGISTERS;
+	mb.requester.functionCode = MB_FUNC_READ_HOLDINGREGISTERS;
 	mb.requester.addr	   = 0x00;
-	mb.requester.totalData    = 2;
+	mb.requester.totalData    = 6;
+	mb.requester.generate(&mb);
 
 	while(1) {
 		mb.requester.generate(&mb);

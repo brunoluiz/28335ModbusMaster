@@ -131,6 +131,12 @@ void master_process(ModbusMaster *self){
 	self->dataResponse.slaveAddress = self->serial.getRxBufferedWord();
 	self->dataResponse.functionCode = self->serial.getRxBufferedWord();
 
+	if (self->dataResponse.slaveAddress != self->dataRequest.slaveAddress ||
+			self->dataResponse.functionCode != self->dataRequest.functionCode ) {
+		self->state = MB_START;
+		return ;
+	}
+
 	if (self->dataRequest.functionCode == MB_FUNC_READ_HOLDINGREGISTERS) {
 		contentSize = self->dataRequest.content[3] * 2 + 1;
 	}
@@ -144,6 +150,8 @@ void master_process(ModbusMaster *self){
 
 	self->dataResponse.crc = (self->serial.getRxBufferedWord() << 8) |
 			self->serial.getRxBufferedWord();
+
+	self->requester.save(self);
 
 	self->successfulRequests++;
 	self->requestProcessed = true;
