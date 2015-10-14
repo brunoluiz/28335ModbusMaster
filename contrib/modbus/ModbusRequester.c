@@ -14,7 +14,7 @@ void requester_generate(ModbusMaster *master) {
 
 	// Reference to MODBUS Data Map
 	char * dataPtr;
-	Uint16 sizeOfMap = 0;
+//	Uint16 sizeOfMap = 0;
 
 	master->dataRequest.slaveAddress = requester.slaveAddress;
 	master->dataRequest.functionCode = requester.functionCode;
@@ -25,14 +25,14 @@ void requester_generate(ModbusMaster *master) {
 			requester.functionCode == MB_FUNC_FORCE_NCOILS)
 	{
 		dataPtr = (char *)&(master->coils);
-		sizeOfMap = sizeof(master->coils);
+//		sizeOfMap = sizeof(master->coils);
 	}
 	else if (requester.functionCode == MB_FUNC_READ_HOLDINGREGISTERS ||
 			requester.functionCode == MB_FUNC_WRITE_HOLDINGREGISTER ||
 			requester.functionCode == MB_FUNC_WRITE_NREGISTERS)
 	{
 		dataPtr = (char *)&(master->holdingRegisters);
-		sizeOfMap = sizeof(master->holdingRegisters);
+//		sizeOfMap = sizeof(master->holdingRegisters);
 	}
 
 	// Second: prepare the dataRequest content array
@@ -96,12 +96,10 @@ void requester_generate(ModbusMaster *master) {
 
 void requester_save(ModbusMaster *master) {
 	ModbusRequester requester = master->requester;
-	Uint16 i, sizeWithoutCRC;
-	Uint16 * transmitStringWithoutCRC;
 
 	// Reference to MODBUS Data Map
-	Uint16 * dataPtr;
-	Uint16 sizeOfMap = 0;
+	char * dataPtr;
+//	Uint16 sizeOfMap;
 
 	// First, get the right data map based on the function code
 	if (requester.functionCode == MB_FUNC_READ_COIL ||
@@ -109,20 +107,21 @@ void requester_save(ModbusMaster *master) {
 			requester.functionCode == MB_FUNC_FORCE_NCOILS)
 	{
 		dataPtr = (char *)&(master->coils);
-		sizeOfMap = sizeof(master->coils);
+//		sizeOfMap = sizeof(master->coils);
 	}
 	else if (requester.functionCode == MB_FUNC_READ_HOLDINGREGISTERS ||
 			requester.functionCode == MB_FUNC_WRITE_HOLDINGREGISTER ||
 			requester.functionCode == MB_FUNC_WRITE_NREGISTERS)
 	{
 		dataPtr = (char *)&(master->holdingRegisters);
-		sizeOfMap = sizeof(master->holdingRegisters);
+//		sizeOfMap = sizeof(master->holdingRegisters);
 	}
 
 	if (requester.functionCode == MB_FUNC_READ_COIL || requester.functionCode == MB_FUNC_READ_INPUT ||
 				requester.functionCode == MB_FUNC_READ_HOLDINGREGISTERS || requester.functionCode == MB_FUNC_READ_INPUTREGISTERS)
 	{
 		Uint16 * memAddr;
+		Uint16 i;
 
 		for(i=0; i < (requester.totalData); i++) {
 			Uint16 padding = i + requester.addr;

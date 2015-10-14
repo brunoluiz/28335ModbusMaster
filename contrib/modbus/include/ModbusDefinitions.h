@@ -19,6 +19,7 @@
 typedef enum {
 	MB_CREATE,
 	MB_START,
+	MB_WAIT,
 	MB_REQUEST,
 	MB_RECEIVE,
 	MB_PROCESS,

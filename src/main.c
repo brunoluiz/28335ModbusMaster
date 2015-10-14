@@ -14,8 +14,8 @@ int main(){
 
 	mb.requester.slaveAddress = 0x01;
 	mb.requester.functionCode = MB_FUNC_READ_HOLDINGREGISTERS;
-	mb.requester.addr	   = 0x00;
-	mb.requester.totalData    = 6;
+	mb.requester.addr	      = 0x02;
+	mb.requester.totalData    = 4;
 	mb.requester.generate(&mb);
 
 	while(1) {

@@ -20,7 +20,7 @@ struct ModbusRequester {
 
 	void (*setContent)(ModbusMaster *master, Uint16 * content, Uint16 length);
 	void (*generate)(ModbusMaster *master);
-	void (*save)(ModbusMaster *save);
+	void (*save)(ModbusMaster *master);
 };
 
 inline void requester_setContent(ModbusMaster *master, Uint16 * content, Uint16 length);

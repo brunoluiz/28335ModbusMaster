@@ -45,6 +45,7 @@ struct ModbusMaster {
 	void (*loopStates)(ModbusMaster *self);
 	void (*create)(ModbusMaster *self);
 	void (*start)(ModbusMaster *self);
+	void (*wait)(ModbusMaster *self);
 	void (*request)(ModbusMaster *self);
 	void (*receive)(ModbusMaster *self);
 	void (*process)(ModbusMaster *self);
@@ -54,6 +55,7 @@ struct ModbusMaster {
 void master_loopStates(ModbusMaster *self);
 inline void master_create(ModbusMaster *self);
 inline void master_start(ModbusMaster *self);
+inline void master_wait(ModbusMaster *self);
 inline void master_receive(ModbusMaster *self);
 inline void master_process(ModbusMaster *self);
 inline void master_destroy(ModbusMaster *self);

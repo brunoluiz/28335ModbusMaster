@@ -7,6 +7,8 @@
 ProfilingTool profiling;
 #endif
 
+Uint64 ticks = 0;
+
 void master_loopStates(ModbusMaster *self){
 	MB_MASTER_DEBUG();
 	switch (self->state) {
@@ -17,6 +19,9 @@ void master_loopStates(ModbusMaster *self){
 	case MB_START:
 		MB_MASTER_DEBUG("State: MB_MASTER_START\n");
 		self->start(self);
+		break;
+	case MB_WAIT:
+		self->wait(self);
 		break;
 	case MB_REQUEST:
 		MB_MASTER_DEBUG("State: MB_MASTER_REQUEST\n");
@@ -84,32 +89,61 @@ void master_request(ModbusMaster *self){
 
 	MB_MASTER_DEBUG();
 
-	self->state = MB_RECEIVE;
+	self->timer.resetTimer();
+	self->timer.setTimerReloadPeriod(&self->timer, MB_REQ_INTERVAL);
+	self->timer.start();
+
+	self->state = MB_WAIT;
 }
 
+void master_wait(ModbusMaster *self) {
+	if (self->timer.expiredTimer(&self->timer)) {
+		self->timer.stop();
+		self->state = MB_RECEIVE;
+	}
+}
 
 void master_receive(ModbusMaster *self){
-	Uint16 fifoWaitBuffer = 0;
-
-	MB_MASTER_DEBUG();
-
+	self->timer.resetTimer();
+	self->timer.setTimerReloadPeriod(&self->timer, MB_REQ_TIMEOUT);
 	self->timer.start();
+
 	self->requestProcessed = false;
 
-	if (self->dataRequest.functionCode == MB_FUNC_READ_HOLDINGREGISTERS) {
-		fifoWaitBuffer = MB_SIZE_COMMON_DATA;
-		fifoWaitBuffer += self->dataRequest.content[3] * 2;
-		fifoWaitBuffer += 1;
-	}
-	else {
-		fifoWaitBuffer = MB_SIZE_RESP_WRITE;
+	// Get basic data from response
+	self->dataResponse.slaveAddress = self->serial.getRxBufferedWord();
+	self->dataResponse.functionCode = self->serial.getRxBufferedWord();
+
+	// Jump to START if there is any problem with the basic info
+	if (self->dataResponse.slaveAddress != self->dataRequest.slaveAddress ||
+			self->dataResponse.functionCode != self->dataRequest.functionCode ) {
+		self->state = MB_START;
+		return ;
 	}
 
-	while (
-		self->serial.rxBufferStatus() < fifoWaitBuffer
+	// Prepare the buffer size
+	if (self->dataRequest.functionCode == MB_FUNC_READ_HOLDINGREGISTERS) {
+		self->serial.fifoWaitBuffer = MB_SIZE_COMMON_DATA_WITHOUTCRC;
+		self->serial.fifoWaitBuffer += self->dataRequest.content[3] * 2;
+		self->serial.fifoWaitBuffer += 1;
+	}
+	else {
+		self->serial.fifoWaitBuffer = MB_SIZE_RESP_WRITE;
+	}
+
+	// Receive the data contents, based on the buffer size
+	while ( ( self->serial.fifoWaitBuffer > 0 )
 		&& ( self->serial.getRxError() == false )
 		&& ( self->timer.expiredTimer(&self->timer) == false )
-	){	}
+	) {
+		if(self->serial.rxBufferStatus() > 0) {
+			self->dataResponse.content[self->dataResponse.contentIdx++] = self->serial.getRxBufferedWord();
+			self->serial.fifoWaitBuffer--;
+		}
+	}
+
+	// Receive the CRC
+	self->dataResponse.crc = (self->serial.getRxBufferedWord() << 8) | self->serial.getRxBufferedWord();
 
 	self->timer.stop();
 #if DEBUG_UTILS_PROFILING
@@ -117,40 +151,14 @@ void master_receive(ModbusMaster *self){
 #endif
 
 	// If there is any error on Reception, it will go to the START state
-	if (self->serial.getRxError() == true || self->timeout == true){
+	if (self->serial.getRxError() == true || self->timer.expiredTimer(&self->timer)){
 		self->state = MB_START;
 	} else {
 		self->state = MB_PROCESS;
 	}
 }
 
-void master_process(ModbusMaster *self){
-	Uint16 contentSize;
-	Uint16 contentIterator;
-
-	self->dataResponse.slaveAddress = self->serial.getRxBufferedWord();
-	self->dataResponse.functionCode = self->serial.getRxBufferedWord();
-
-	if (self->dataResponse.slaveAddress != self->dataRequest.slaveAddress ||
-			self->dataResponse.functionCode != self->dataRequest.functionCode ) {
-		self->state = MB_START;
-		return ;
-	}
-
-	if (self->dataRequest.functionCode == MB_FUNC_READ_HOLDINGREGISTERS) {
-		contentSize = self->dataRequest.content[3] * 2 + 1;
-	}
-	else {
-		contentSize = MB_SIZE_CONTENT_NORMAL;
-	}
-
-	for (contentIterator = 0; contentIterator < contentSize; contentIterator++){
-		self->dataResponse.content[self->dataResponse.contentIdx++] = self->serial.getRxBufferedWord();
-	}
-
-	self->dataResponse.crc = (self->serial.getRxBufferedWord() << 8) |
-			self->serial.getRxBufferedWord();
-
+void master_process (ModbusMaster *self){
 	self->requester.save(self);
 
 	self->successfulRequests++;
@@ -196,6 +204,7 @@ ModbusMaster construct_ModbusMaster(){
 	modbusMaster.loopStates = master_loopStates;
 	modbusMaster.create = master_create;
 	modbusMaster.start = master_start;
+	modbusMaster.wait = master_wait;
 	modbusMaster.request = master_request;
 	modbusMaster.receive = master_receive;
 	modbusMaster.process = master_process;

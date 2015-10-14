@@ -5,7 +5,8 @@
 #include "ModbusDefinitions.h"
 #include "Serial.h"
 
-#define MB_REQ_TIMEOUT			1500000
+#define MB_REQ_TIMEOUT			500000
+#define MB_REQ_INTERVAL			500000 // In us
 
 // Modbus settings ========================================
 #define MB_SLAVE_ID				0x01
@@ -76,5 +77,7 @@
 #define MB_MASTER_DEBUG_ENABLED				0
 #define SERIAL_DEBUG_ENABLED				0
 #define TIMER_DEBUG_ENABLED					0
+
+#define MB_REQ_TICKS			CPU_FREQ*1000*MB_REQ_INTERVAL
 
 #endif /* MODBUSSETTINGS_H_ */
