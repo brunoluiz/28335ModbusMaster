@@ -19,6 +19,9 @@ void master_loopStates(ModbusMaster *self){
 	case MB_START:
 		MB_MASTER_DEBUG("State: MB_MASTER_START\n");
 		self->start(self);
+	case MB_END:
+		MB_MASTER_DEBUG("State: MB_MASTER_START\n");
+		self->start(self);
 		break;
 	case MB_WAIT:
 		self->wait(self);
@@ -110,7 +113,10 @@ void master_receive(ModbusMaster *self){
 
 	// Wait to have some date at the RX Buffer
 	// If removed it can give errors on address and function code receiving
-	while (self->serial.rxBufferStatus() < 2) { ; }
+	while (self->serial.rxBufferStatus() < 2
+			&& ( self->serial.getRxError() == false )
+			&& ( self->timer.expiredTimer(&self->timer) == false )
+	) { ; }
 
 	// Get basic data from response
 	self->dataResponse.slaveAddress = self->serial.getRxBufferedWord();
@@ -148,13 +154,13 @@ void master_receive(ModbusMaster *self){
 	// Jump to START if there is any problem with the basic info
 	if (self->dataResponse.slaveAddress != self->dataRequest.slaveAddress ||
 			self->dataResponse.functionCode != self->dataRequest.functionCode ) {
-		self->state = MB_START;
+		self->state = MB_END;
 		return ;
 	}
 
 	// If there is any error on Reception, it will go to the START state
 	if (self->serial.getRxError() == true || self->timer.expiredTimer(&self->timer)){
-		self->state = MB_START;
+		self->state = MB_END;
 	} else {
 		self->state = MB_PROCESS;
 	}
@@ -165,7 +171,7 @@ void master_process (ModbusMaster *self){
 
 	self->requestProcessed = true;
 
-	self->state = MB_START;
+	self->state = MB_END;
 }
 
 void master_destroy(ModbusMaster *self){

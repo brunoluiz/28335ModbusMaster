@@ -21,4 +21,12 @@ int main(){
 		mb.requester.generate(&mb);
 		mb.loopStates(&mb);
 	}
+
+//	while (1) {
+//		mb.holdingRegisters.dummy0 = 20.1;
+//		mb.holdingRegisters.dummy1 = 23.13;
+//
+//		mb.requester.readHolding(&mb, 1, 2, 4);
+//		mb.requester.writeHolding(&mb, 1, 2, 4);
+//	}
 }

@@ -4,9 +4,49 @@
 #include "Log.h"
 #include "Crc.h"
 
-void requester_setContent(ModbusMaster *master, Uint16 * content, Uint16 length) {
-	;
+int requester_request(ModbusMaster *mb, Uint16 slaveAddress, ModbusFunctionCode functionCode,
+		Uint16 addr, Uint16 totalData) {
+	mb->requester.slaveAddress = slaveAddress;
+	mb->requester.functionCode = functionCode;
+	mb->requester.addr	       = addr;
+	mb->requester.totalData    = totalData;
+	mb->requester.generate(mb);
+
+	// Set the ModbusMaster to the start state
+	mb->state = MB_START;
+
+	// Wait until the MobbusMaster finish all the state flow
+	while(mb->state != MB_END) {
+		mb->loopStates(mb);
+	}
+
+	return 1;
 }
+
+int requester_readInputs(ModbusMaster *mb, Uint16 slaveAddress, Uint16 addr, Uint16 totalData) {
+	return mb->requester.request(mb, slaveAddress, MB_FUNC_READ_INPUT, addr, totalData);
+}
+
+int requester_readCoils(ModbusMaster *mb, Uint16 slaveAddress, Uint16 addr, Uint16 totalData) {
+	return mb->requester.request(mb, slaveAddress, MB_FUNC_READ_COIL, addr, totalData);
+}
+
+int requester_readHolding(ModbusMaster *mb, Uint16 slaveAddress, Uint16 addr, Uint16 totalData) {
+	return mb->requester.request(mb, slaveAddress, MB_FUNC_READ_HOLDINGREGISTERS, addr, totalData);
+}
+
+int requester_readInputRegs(ModbusMaster *mb, Uint16 slaveAddress, Uint16 addr, Uint16 totalData) {
+	return mb->requester.request(mb, slaveAddress, MB_FUNC_READ_INPUTREGISTERS, addr, totalData);
+}
+
+int requester_forceCoils(ModbusMaster *mb, Uint16 slaveAddress, Uint16 addr, Uint16 totalData) {
+	return mb->requester.request(mb, slaveAddress, MB_FUNC_FORCE_NCOILS, addr, totalData);
+}
+
+int requester_writeHolding(ModbusMaster *mb, Uint16 slaveAddress, Uint16 addr, Uint16 totalData) {
+	return mb->requester.request(mb, slaveAddress, MB_FUNC_WRITE_NREGISTERS, addr, totalData);
+}
+
 void requester_generate(ModbusMaster *master) {
 	ModbusRequester requester = master->requester;
 	Uint16 i, sizeWithoutCRC;
@@ -141,9 +181,16 @@ ModbusRequester construct_ModbusRequestHandler(){
 
 	requester.isReady = false;
 
-	requester.generate = requester_generate;
-	requester.setContent = requester_setContent;
-	requester.save = requester_save;
+	requester.generate   = requester_generate;
+	requester.save       = requester_save;
+	requester.request    = requester_request;
+
+	requester.readCoils     = requester_readCoils;
+	requester.readInputs    = requester_readInputs;
+	requester.readHolding   = requester_readHolding;
+	requester.readInputRegs = requester_readInputRegs;
+	requester.writeHolding  = requester_writeHolding;
+	requester.forceCoils    = requester_forceCoils;
 
 	MB_DATA_HANDLER_DEBUG();
 

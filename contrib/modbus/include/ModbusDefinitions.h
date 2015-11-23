@@ -23,6 +23,7 @@ typedef enum {
 	MB_REQUEST,
 	MB_RECEIVE,
 	MB_PROCESS,
+	MB_END,
 	MB_DESTROY
 } ModbusMasterState;
 
