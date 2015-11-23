@@ -61,8 +61,6 @@ void master_create(ModbusMaster *self){
 
 void master_start(ModbusMaster *self){
 	MB_MASTER_DEBUG();
-
-	self->timer.resetTimer();
 	
 	self->dataRequest.clear(&self->dataRequest);
 	self->dataResponse.clear(&self->dataResponse);
@@ -70,7 +68,18 @@ void master_start(ModbusMaster *self){
 	self->serial.clear();
 	self->timeout = false;
 
-	self->state = MB_REQUEST;
+	self->timer.resetTimer();
+	self->timer.setTimerReloadPeriod(&self->timer, MB_REQ_INTERVAL);
+	self->timer.start();
+
+	self->state = MB_WAIT;
+}
+
+void master_wait(ModbusMaster *self) {
+	if (self->timer.expiredTimer(&self->timer)) {
+		self->timer.stop();
+		self->state = MB_REQUEST;
+	}
 }
 
 void master_request(ModbusMaster *self){
@@ -89,18 +98,7 @@ void master_request(ModbusMaster *self){
 
 	MB_MASTER_DEBUG();
 
-	self->timer.resetTimer();
-	self->timer.setTimerReloadPeriod(&self->timer, MB_REQ_INTERVAL);
-	self->timer.start();
-
-	self->state = MB_WAIT;
-}
-
-void master_wait(ModbusMaster *self) {
-	if (self->timer.expiredTimer(&self->timer)) {
-		self->timer.stop();
-		self->state = MB_RECEIVE;
-	}
+	self->state = MB_RECEIVE;
 }
 
 void master_receive(ModbusMaster *self){
@@ -110,16 +108,13 @@ void master_receive(ModbusMaster *self){
 
 	self->requestProcessed = false;
 
+	// Wait to have some date at the RX Buffer
+	// If removed it can give errors on address and function code receiving
+	while (self->serial.rxBufferStatus() < 2) { ; }
+
 	// Get basic data from response
 	self->dataResponse.slaveAddress = self->serial.getRxBufferedWord();
 	self->dataResponse.functionCode = self->serial.getRxBufferedWord();
-
-	// Jump to START if there is any problem with the basic info
-	if (self->dataResponse.slaveAddress != self->dataRequest.slaveAddress ||
-			self->dataResponse.functionCode != self->dataRequest.functionCode ) {
-		self->state = MB_START;
-		return ;
-	}
 
 	// Prepare the buffer size
 	if (self->dataRequest.functionCode == MB_FUNC_READ_HOLDINGREGISTERS) {
@@ -150,6 +145,13 @@ void master_receive(ModbusMaster *self){
 	profiling.stop(&profiling);
 #endif
 
+	// Jump to START if there is any problem with the basic info
+	if (self->dataResponse.slaveAddress != self->dataRequest.slaveAddress ||
+			self->dataResponse.functionCode != self->dataRequest.functionCode ) {
+		self->state = MB_START;
+		return ;
+	}
+
 	// If there is any error on Reception, it will go to the START state
 	if (self->serial.getRxError() == true || self->timer.expiredTimer(&self->timer)){
 		self->state = MB_START;
@@ -161,7 +163,6 @@ void master_receive(ModbusMaster *self){
 void master_process (ModbusMaster *self){
 	self->requester.save(self);
 
-	self->successfulRequests++;
 	self->requestProcessed = true;
 
 	self->state = MB_START;
